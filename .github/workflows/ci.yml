@@ -1,0 +1,43 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  deploy:
+
+    runs-on: windows-latest  # For a list of available runner types, refer to
+                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
+    env:
+      Solution_Name: WindowsServiceManager.sln                    # Replace with your solution name, i.e. MyWpfApp.sln.
+      Wpf_Project_Path: WindowsServiceManager.csproj
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    - name: Restore the application
+      run: dotnet restore ${{ env.Wpf_Project_Path }}
+      
+    # Build Windows Application
+    - name: Build Windows Applicatiopn
+      run: dotnet build ${{ env.Wpf_Project_Path }} -c Release -no-restore
+      
+    # Publish Windows Application
+    - name: dotnet publish ${{ env.Wpf_Project_Path }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true
+    
+    
