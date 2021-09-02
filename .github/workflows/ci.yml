@@ -19,6 +19,7 @@ jobs:
 
     env:
       Solution_Name: WindowsServiceManager.sln                    # Replace with your solution name, i.e. MyWpfApp.sln.
+      App_Packages_Directory: AppPackages
       Actions_Allow_Unsecure_Commands: true                       # Allows AddPAth and SetEnv commands
 
     steps:
