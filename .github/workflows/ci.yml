@@ -8,14 +8,17 @@ on:
 
 jobs:
 
-  deploy:
+  build:
+    
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     env:
       Solution_Name: WindowsServiceManager.sln                    # Replace with your solution name, i.e. MyWpfApp.sln.
-      Wpf_Project_Path: WindowsServiceManager.csproj
 
     steps:
     - name: Checkout
@@ -29,16 +32,28 @@ jobs:
       with:
         dotnet-version: 5.0.x
 
+    # Add  MsBuild to the PATH: https://github.com/microsoft/setup-msbuild
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.1
+
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: dotnet restore ${{ env.Wpf_Project_Path }}
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    #Create the app package by building and packaging the Windows Application Packaging project
+    - name: Create the app package
+      run: msbuild $env:Solution_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle
+      env:
+        Appx_Bundle: Always
+        Appx_Bundle_Platforms: x86|x64
+        Appx_Package_Build_Mode: StoreUpload
+        Configuration: ${{ matrix.configuration }}
       
-    # Build Windows Application
-    - name: Build Windows Applicatiopn
-      run: dotnet build ${{ env.Wpf_Project_Path }} -c Release -no-restore
-      
-    # Publish Windows Application
-    - name: Publish Windows Application
-      run: dotnet publish ${{ env.Wpf_Project_Path }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true
-    
-    
+    # Upload the MSIX package: https://github.com/marketplace/actions/upload-artifact
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: MSIX Package
+        path: \AppPackages
