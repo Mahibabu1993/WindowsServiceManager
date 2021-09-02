@@ -38,6 +38,7 @@ jobs:
       run: dotnet build ${{ env.Wpf_Project_Path }} -c Release -no-restore
       
     # Publish Windows Application
-    - name: dotnet publish ${{ env.Wpf_Project_Path }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true
+    - name: Publish Windows Application
+      run: dotnet publish ${{ env.Wpf_Project_Path }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true
     
     
